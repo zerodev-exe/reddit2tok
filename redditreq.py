@@ -4,7 +4,7 @@ import random
 # Set up your Reddit API credentials
 client_id = "mqUapE34mxg-Fo_KRSa9rQ"
 client_secret = "d3zMEmGJxK6Ov5FYv4_qFSHDpFpMOQ"
-user_agent = "random_post_fetcher:v1.0 (by u/your_reddit_username)"
+user_agent = "random_post_fetcher:v1.0 (by u/PwaDiePie)"
 
 # Create a Reddit instance
 reddit = praw.Reddit(client_id=client_id,
@@ -25,9 +25,6 @@ def get_random_post_text(subreddit_name="nosleep"):
     # Return the title and body text
     return {
         "title": random_post.title,
-        "body": random_post.selftext
+        "body": random_post.selftext,
+        "id": random_post.id
     }
-
-random_post = get_random_post_text()
-print("Title:", random_post["title"])
-print("Body:", random_post["body"])
