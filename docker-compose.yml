@@ -2,6 +2,7 @@ services:
   mimic3:
     image: mycroftai/mimic3:latest
     volumes:
-      - ./mimic3:/home/mimic3/.local/share/mycroft/mimic3
+      - ./mimic3/:/home/mimic3/.local/share/mycroft/mimic3/voices/en_US/
+    command: ["/bin/bash", "-c", "chmod 777 /home/mimic3/.local/share/mycroft/mimic3/"]
     ports:
       - '9090:59125'
