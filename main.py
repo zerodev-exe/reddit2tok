@@ -5,7 +5,7 @@ from utils import redditreq, generate_subs, utils, tts, video
 from tiktok_uploader import tiktok, Config
 
 IPV4_ADRESS = "http://127.0.0.1:9090"  # Replace with your IPv4 address
-HOURS = 2 # How many hours between posts
+HOURS = 1 # How many hours between posts
 
 SUCESS = True
 FAILED = False
@@ -23,6 +23,7 @@ def main():
         print("output.txt not found")
         return FAILED
 
+    print("Creating the audio track...")
     tts.text_to_speech(utils.input_file_path, utils.temp_mp3_path, IPV4_ADRESS)
 
     if not os.path.exists(utils.temp_mp3_path):
@@ -44,6 +45,7 @@ def main():
         print(result.stderr)
         return FAILED
 
+    print("Generating subtitles...")
     subprocess.run(f"whisper {utils.audio_mp3_path} --model turbo --output_format srt --output_dir {utils.TEMP_FOLDER} --language English --max_words_per_line 3 --max_line_width 15 --word_timestamps True".split())
 
     result = subprocess.run(f"ffmpeg -i {utils.partmp4_path} -vf 'iw*0.25:ih*1' -vf subtitles='{utils.final_srt_file}':force_style='Alignment=10' -y {utils.final_upload}".split())
@@ -60,3 +62,5 @@ if __name__ == "__main__":
         failed = False
         while not failed:
             failed = main()
+        print("Sucessfully uploaded video. Waiting...")
+        time.sleep(HOURS * 60 * 60)
