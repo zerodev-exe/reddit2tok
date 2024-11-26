@@ -30,28 +30,35 @@ def main():
         print("input.mp3 not found")
         return FAILED
 
-    result = subprocess.run(f"ffmpeg -i {utils.temp_mp3_path} -af atempo=1.35 -y {utils.audio_mp3_path}".split(), check=True)
+    print("Speeding up the audio track...")
+    result = subprocess.run(f"ffmpeg -i {utils.temp_mp3_path} -af atempo=1.35 -y {utils.audio_mp3_path}".split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
     if result.returncode != 0:
         print("Failed to speed up audio.")
         print(result.stderr)
         return FAILED
 
+    os.remove(utils.temp_mp3_path)
     if not os.path.exists(utils.audio_mp3_path):
         return FAILED
 
-    result = subprocess.run(f"ffmpeg -i {utils.return_random_video()} -i {utils.audio_mp3_path} -map 0:v -map 1:a -c:v copy -c:a aac -b:a 192k -shortest -y {utils.partmp4_path}".split())
+    print("Generating the video...")
+    video.generate_video(utils.audio_mp3_path)
+    result = subprocess.run(f"ffmpeg -i {utils.return_random_video()} -i {utils.audio_mp3_path} -map 0:v -map 1:a -c:v copy -c:a aac -b:a 192k -shortest -y {utils.partmp4_path}".split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
     if result.returncode != 0:
         print("Failed to merge audio and video.")
         print(result.stderr)
         return FAILED
 
     print("Generating subtitles...")
-    subprocess.run(f"whisper {utils.audio_mp3_path} --model turbo --output_format srt --output_dir {utils.TEMP_FOLDER} --language English --max_words_per_line 3 --max_line_width 15 --word_timestamps True".split())
+    subprocess.run(f"whisper {utils.audio_mp3_path} --model turbo --output_format srt --output_dir {utils.TEMP_FOLDER} --language English --max_words_per_line 3 --max_line_width 15 --word_timestamps True".split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
 
-    result = subprocess.run(f"ffmpeg -i {utils.partmp4_path} -vf 'iw*0.25:ih*1' -vf subtitles='{utils.final_srt_file}':force_style='Alignment=10' -y {utils.final_upload}".split())
+    print("Adding the subtitles to the video...")
+    result = subprocess.run(f"ffmpeg -i {utils.partmp4_path} -vf subtitles='{utils.final_srt_file}':force_style='Alignment=10' -y {utils.final_upload}".split())
     if result.returncode != 0:
         print(result.stderr)
         return FAILED
+
+    os.rmdir(utils.TEMP_FOLDER)
 
     tiktok.upload_video("user", "upload.mp4",  random_post["title"])
     return SUCESS

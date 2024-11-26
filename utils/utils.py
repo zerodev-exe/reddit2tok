@@ -11,6 +11,9 @@ audio_file_name = "final"
 if not path.exists(OUTPUT_DIR):
     makedirs(OUTPUT_DIR)
 
+if not path.exists(BACKGROUND_VIDEOS):
+    makedirs(BACKGROUND_VIDEOS)
+
 if not path.exists(TEMP_FOLDER):
     makedirs(TEMP_FOLDER)
 
