@@ -15,8 +15,7 @@ def main():
     random_post = redditreq.get_random_post_text()
     print("Title:", random_post["title"])
     print("Subreddit:", random_post["sub"])
-    print("post_id:", random_post["id"])
-
+    print("Post Link:", random_post["url"])
 
     body = random_post["body"].replace(" ", "").replace("‘", "'").replace("’", "'").replace("“", "\"").replace("”", "\"")
     with open(variables.input_file_path, "w") as file:

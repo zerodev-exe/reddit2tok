@@ -6,7 +6,7 @@ client_id = "mqUapE34mxg-Fo_KRSa9rQ"
 client_secret = "d3zMEmGJxK6Ov5FYv4_qFSHDpFpMOQ"
 user_agent = "random_post_fetcher:v1.0 (by u/PwaDiePie)"
 
-subreddits = ["nosleep"]
+subreddits = ["nosleep", "confession"]
 
 # Create a Reddit instance
 reddit = praw.Reddit(
@@ -21,17 +21,22 @@ def return_random_subreddit():
 
 def get_random_post_text():
     # Get the subreddit
-    subreddit = reddit.subreddit(return_random_subreddit())
+    sub = return_random_subreddit()
+    subreddit = reddit.subreddit(sub)
 
     # Fetch a list of hot posts (or another list)
-    posts = list(subreddit.hot(limit=200))  # Getting top 200 posts from 'hot'
+    posts = list(subreddit.hot(limit=100))  # Getting top 100 posts from 'hot'
 
     # Select a random post
     random_post = random.choice(posts)
+
+    reddit_url = "https://www.reddit.com/r/"+sub+"/"+random_post.id
 
     # Return the title and body text
     return {
         "title": random_post.title,
         "body": random_post.selftext,
-        "id": random_post.id
+        "id": random_post.id,
+        "sub": subreddit,
+        "url": reddit_url
     }
