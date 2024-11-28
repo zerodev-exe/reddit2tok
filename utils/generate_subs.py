@@ -1,7 +1,6 @@
 import math
 import ffmpeg
 from faster_whisper import WhisperModel
-import utils.video
 import os
 
 num_cores = os.cpu_count()
