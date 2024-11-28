@@ -19,3 +19,9 @@ python -m venv .venv
 pip install -r requirements.txt
 python3 main.py
 ```
+
+#### If you have an Nvidia GPU
+
+```
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124 --force-reinstall --no-cache
+```
