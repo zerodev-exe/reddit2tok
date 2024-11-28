@@ -80,7 +80,7 @@ def generate_subtitle_file(subtitle_file, segments, max_words=3, max_line_width=
 
     return subtitle_file
 
-def run(input_video, input_audio, srt_file, output_video):
+def run(input_audio, srt_file):
     segments = transcribe(audio=input_audio)
     subtitle_file = generate_subtitle_file(subtitle_file=srt_file, segments=segments)
 
