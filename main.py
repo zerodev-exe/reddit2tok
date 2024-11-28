@@ -1,8 +1,6 @@
-import subprocess
-import os
-import time
-from utils import redditreq, generate_subs, utils, tts, video
-from tiktok_uploader import tiktok, Config
+import subprocess, shutil, os, time
+from utils import redditreq, generate_subs, tts, variables, video, utils
+import datetime
 
 IPV4_ADRESS = "http://127.0.0.1:9090"  # Replace with your IPv4 address
 HOURS = 1 # How many hours between posts
@@ -11,60 +9,62 @@ SUCESS = True
 FAILED = False
 
 def main():
+    utils.setup_directories()
+
     print("Making a request to reddit...")
     random_post = redditreq.get_random_post_text()
     print("Title:", random_post["title"])
+    print("Subreddit:", random_post["sub"])
+    print("post_id:", random_post["id"])
+
+
     body = random_post["body"].replace(" ", "").replace("‘", "'").replace("’", "'").replace("“", "\"").replace("”", "\"")
-    with open(utils.input_file_path, "w") as file:
+    with open(variables.input_file_path, "w") as file:
         print("Writing to output.txt...")
         file.write(body)
 
-    if not os.path.exists(utils.input_file_path):
-        print("output.txt not found")
+    if not os.path.exists(variables.input_file_path):
+        print(f"{variables.input_file_path} not found")
         return FAILED
 
-    print("Creating the audio track...")
-    tts.text_to_speech(utils.input_file_path, utils.temp_mp3_path, IPV4_ADRESS)
+    tts.text_to_speech(variables.input_file_path, variables.temp_mp3_path, IPV4_ADRESS)
 
-    if not os.path.exists(utils.temp_mp3_path):
+    if not os.path.exists(variables.temp_mp3_path):
         print("input.mp3 not found")
         return FAILED
 
     print("Speeding up the audio track...")
-    result = subprocess.run(f"ffmpeg -i {utils.temp_mp3_path} -af atempo=1.35 -y {utils.audio_mp3_path}".split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
-    if result.returncode != 0:
-        print("Failed to speed up audio.")
-        print(result.stderr)
+    video.speedup_audio(variables.temp_mp3_path, 1.35, variables.audio_mp3_path)
+    if not os.path.exists(variables.audio_mp3_path):
         return FAILED
 
-    os.remove(utils.temp_mp3_path)
-    if not os.path.exists(utils.audio_mp3_path):
-        return FAILED
+    os.remove(variables.temp_mp3_path)
 
-    print("Generating the video...")
-    video.generate_video(utils.audio_mp3_path)
-    result = subprocess.run(f"ffmpeg -i {utils.return_random_video()} -i {utils.audio_mp3_path} -map 0:v -map 1:a -c:v copy -c:a aac -b:a 192k -shortest -y {utils.partmp4_path}".split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
-    if result.returncode != 0:
-        print("Failed to merge audio and video.")
-        print(result.stderr)
-        return FAILED
+    print("Adding the audio track to the video...")
+
+    # subprocess.run(f"ffmpeg -i {utils.return_random_video()} -i {variables.audio_mp3_path} -map 0:v -map 1:a -c:v copy -c:a aac -b:a 192k -shortest -y {variables.partmp4_path}".split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+    video.create_temp_video(utils.return_random_video(), variables.audio_mp3_path, variables.partmp4_path)
+    # result = video.create_temp_video(utils.return_random_video(), variables.audio_mp3_path, variables.partmp4_path)
+    # if not result:
+    #     return FAILED
 
     print("Generating subtitles...")
-    subprocess.run(f"whisper {utils.audio_mp3_path} --model turbo --output_format srt --output_dir {utils.TEMP_FOLDER} --language English --max_words_per_line 3 --max_line_width 15 --word_timestamps True".split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+    generate_subs.run(variables.audio_mp3_path, variables.final_srt_file)
 
-    print("Adding the subtitles to the video...")
-    result = subprocess.run(f"ffmpeg -i {utils.partmp4_path} -vf subtitles='{utils.final_srt_file}':force_style='Alignment=10' -y {utils.final_upload}".split())
-    if result.returncode != 0:
-        print(result.stderr)
-        return FAILED
+    video.create_final_video(variables.partmp4_path, variables.final_srt_file, variables.final_upload)
 
-    os.rmdir(utils.TEMP_FOLDER)
+    session_id = "0b9e6d830a112c460718ed5dc2b478d8"
+    file = variables.final_upload
+    title = random_post["title"]
+    tags = ["scary", "spooky", "scarystories", "fyp"]
+    users = ["poweredbyreddit"]
 
-    tiktok.upload_video("user", "upload.mp4",  random_post["title"])
+    # Publish the video
+    # TODO: Add your own upload function here
+
     return SUCESS
 
 if __name__ == "__main__":
-    _ = Config.load("./config.txt")
     while True:
         failed = False
         while not failed:

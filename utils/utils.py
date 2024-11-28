@@ -1,4 +1,5 @@
 from os import makedirs, path, listdir
+import shutil
 import random
 
 
@@ -7,16 +8,19 @@ OUTPUT_DIR = "out"
 BACKGROUND_VIDEOS = "bg_vids"
 audio_file_name = "final"
 
+def setup_directories():
+    if not path.exists(OUTPUT_DIR):
+        makedirs(OUTPUT_DIR)
 
-if not path.exists(OUTPUT_DIR):
-    makedirs(OUTPUT_DIR)
+    if not path.exists(BACKGROUND_VIDEOS):
+        makedirs(BACKGROUND_VIDEOS)
 
-if not path.exists(BACKGROUND_VIDEOS):
-    makedirs(BACKGROUND_VIDEOS)
+    if not path.exists(TEMP_FOLDER):
+        makedirs(TEMP_FOLDER)
 
-if not path.exists(TEMP_FOLDER):
-    makedirs(TEMP_FOLDER)
-
+def cleanup():
+    shutil.rmtree(OUTPUT_DIR)
+    shutil.rmtree(TEMP_FOLDER)
 
 input_file_path = path.join(TEMP_FOLDER, "input.txt")
 

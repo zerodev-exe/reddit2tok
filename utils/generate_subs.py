@@ -1,98 +1,87 @@
-import time
 import math
 import ffmpeg
-import utils as utils
-
 from faster_whisper import WhisperModel
+import utils.video
+import os
 
-input_video = "temp.mp4"
-input_video_name = input_video.replace(".mp4", ".wav")
-
-def extract_audio():
-    extracted_audio = f"audio-{input_video_name}.wav"
-    stream = ffmpeg.input(input_video)
-    stream = ffmpeg.output(stream, extracted_audio)
-    ffmpeg.run(stream, overwrite_output=True)
-    return extracted_audio
+num_cores = os.cpu_count()
 
 def transcribe(audio):
-    model = WhisperModel("small")
-    segments, info = model.transcribe(audio)
-    language = info[0]
-    print("Transcription language", info[0])
+    whisper_size = "turbo"
+    model = WhisperModel(
+        whisper_size,
+        )
+    segments, _ = model.transcribe(audio)
+
     segments = list(segments)
     for segment in segments:
-        # print(segment)
-        print("[%.2fs -> %.2fs] %s" %
+        print("[%.2fs --> %.2fs] %s" %
               (segment.start, segment.end, segment.text))
-    return language, segments
+    return segments
+
+def split_segment_by_words_and_line_width(segment, max_words=3, max_line_width=15):
+    words = segment.text.split()
+    num_sub_segments = math.ceil(len(words) / max_words)
+    duration_per_word = (segment.end - segment.start) / len(words)
+    
+    sub_segments = []
+    for i in range(num_sub_segments):
+        start_word_idx = i * max_words
+        end_word_idx = min((i + 1) * max_words, len(words))
+        sub_text = " ".join(words[start_word_idx:end_word_idx])
+
+        # Split lines to meet the max_line_width constraint
+        lines = []
+        current_line = ""
+        for word in sub_text.split():
+            if len(current_line) + len(word) + 1 <= max_line_width:  # +1 for space
+                current_line += (" " + word if current_line else word)
+            else:
+                lines.append(current_line)
+                current_line = word
+        if current_line:
+            lines.append(current_line)
+        formatted_text = "\n".join(lines)
+
+        sub_start_time = segment.start + start_word_idx * duration_per_word
+        sub_end_time = segment.start + end_word_idx * duration_per_word
+        
+        sub_segments.append((sub_start_time, sub_end_time, formatted_text))
+    
+    return sub_segments
 
 def format_time(seconds):
-
     hours = math.floor(seconds / 3600)
     seconds %= 3600
     minutes = math.floor(seconds / 60)
     seconds %= 60
     milliseconds = round((seconds - math.floor(seconds)) * 1000)
     seconds = math.floor(seconds)
-    formatted_time = f"{hours:02d}:{minutes:02d}:{seconds:01d},{milliseconds:03d}"
+    formatted_time = f"{hours:02d}:{minutes:02d}:{seconds:02d},{milliseconds:03d}"
 
     return formatted_time
 
-def generate_subtitle_file(language, segments):
-
-    subtitle_file = f"sub-{input_video_name}.{language}.srt"
+def generate_subtitle_file(subtitle_file, segments, max_words=3, max_line_width=15):
     text = ""
-    for index, segment in enumerate(segments):
-        segment_start = format_time(segment.start)
-        segment_end = format_time(segment.end)
-        text += f"{str(index+1)} \n"
-        text += f"{segment_start} --> {segment_end} \n"
-        text += f"{segment.text} \n"
-        text += "\n"
+    index = 0
+
+    for segment in segments:
+        sub_segments = split_segment_by_words_and_line_width(segment, max_words, max_line_width)
+        for sub_segment in sub_segments:
+            index += 1
+            segment_start = format_time(sub_segment[0])
+            segment_end = format_time(sub_segment[1])
+            text += f"{str(index)}\n"
+            text += f"{segment_start} --> {segment_end}\n"
+            text += f"{sub_segment[2]}\n\n"
         
-    f = open(subtitle_file, "w")
-    f.write(text)
-    f.close()
+    with open(subtitle_file, "w") as f:
+        f.write(text)
 
     return subtitle_file
 
-def add_subtitle_to_video(soft_subtitle, subtitle_file,  subtitle_language):
-
-    video_input_stream = ffmpeg.input(input_video)
-    subtitle_input_stream = ffmpeg.input(subtitle_file)
-    output_video = f"output-{input_video_name}.mp4"
-    subtitle_track_title = subtitle_file.replace(".srt", "")
-
-    if soft_subtitle:
-        stream = ffmpeg.output(
-            video_input_stream, subtitle_input_stream, output_video, **{"c": "copy", "c:s": "mov_text"},
-            **{"metadata:s:s:0": f"language={subtitle_language}",
-            "metadata:s:s:0": f"title={subtitle_track_title}"}
-        )
-        ffmpeg.run(stream, overwrite_output=True)
-    else:
-        stream = ffmpeg.output(video_input_stream, output_video,
-
-                               vf=f"subtitles={subtitle_file}")
-
-        ffmpeg.run(stream, overwrite_output=True)
-
-def run():
-    extracted_audio = extract_audio()
-    language, segments = transcribe(audio=extracted_audio)
-    subtitle_file = generate_subtitle_file(
-        language=language,
-        segments=segments
-    )
+def run(input_video, input_audio, srt_file, output_video):
+    segments = transcribe(audio=input_audio)
+    subtitle_file = generate_subtitle_file(subtitle_file=srt_file, segments=segments)
 
     print("Subtitle file generated:", subtitle_file)
-
-
-    add_subtitle_to_video(
-        soft_subtitle=True,
-        subtitle_file=subtitle_file,
-        subtitle_language=language
-    )
-
-# run()
