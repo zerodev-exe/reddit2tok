@@ -30,7 +30,7 @@ def get_random_post_text():
     # Select a random post
     random_post = random.choice(posts)
 
-    reddit_url = "https://www.reddit.com/r/"+sub+"/"+random_post.id
+    reddit_url = "https://www.reddit.com/r/"+sub+"/comments/"+random_post.id
 
     # Return the title and body text
     return {

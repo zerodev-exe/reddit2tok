@@ -40,7 +40,6 @@ def main():
     os.remove(variables.temp_mp3_path)
 
     print("Adding the audio track to the video...")
-
     # subprocess.run(f"ffmpeg -i {utils.return_random_video()} -i {variables.audio_mp3_path} -map 0:v -map 1:a -c:v copy -c:a aac -b:a 192k -shortest -y {variables.partmp4_path}".split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
     video.create_temp_video(utils.return_random_video(), variables.audio_mp3_path, variables.partmp4_path)
     # result = video.create_temp_video(utils.return_random_video(), variables.audio_mp3_path, variables.partmp4_path)
