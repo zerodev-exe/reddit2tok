@@ -1,9 +1,13 @@
 import praw
+import os
 import random
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Set up your Reddit API credentials
-client_id = "mqUapE34mxg-Fo_KRSa9rQ"
-client_secret = "d3zMEmGJxK6Ov5FYv4_qFSHDpFpMOQ"
+client_id = os.getenv("REDDIT_CLIENT_ID")
+client_secret = os.getenv("REDDIT_CLIENT_SECRET")
 user_agent = "random_post_fetcher:v1.0 (by u/PwaDiePie)"
 
 subreddits = ["nosleep", "confession"]
