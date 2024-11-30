@@ -4,9 +4,9 @@ import random
 from moviepy.video.tools.subtitles import SubtitlesClip
 from moviepy.editor import *
 import os
-import conf
+from dotenv import load_dotenv
 
-IMAGEMAGICK_BINARY = "C:\\Users\\ivan\\AppData\\Local\\Microsoft\\WindowsApps\\magick.exe"
+load_dotenv()
 
 def speedup_audio_old(audio_input, speed_factor, output_audio):
     # Load the audio file
@@ -33,13 +33,12 @@ def create_temp_video(video_input, audio_input, output_video):
     audio = audio.subclip(0, shortest_duration)
 
     # Set the audio to the video
-    video_with_audio = video.set_audio(audio).speedx(factor=2.05)
+    video_with_audio = video.set_audio(audio).speedx(factor=1)
 
     # Save the resulting video
     video_with_audio.write_videofile(output_video, codec="libx264", audio_codec="aac",)
 
-def create_final_video_old(video_input, srt_file, output_video):
-    print("Adding subtitles to the video...")
+def create_final_video(video_input, srt_file, output_video):
     
     # Check if the SRT file exists and is not empty
     if not os.path.exists(srt_file) or os.path.getsize(srt_file) == 0:
@@ -81,7 +80,7 @@ def create_temp_video_old(video_input, audio_input, output_video):
         return True
 
 
-def create_final_video(video_input, srt_file, output_video):
+def create_final_video_old(video_input, srt_file, output_video):
     print("Adding the subtitles to the video...")
     video_input_stream = ffmpeg.input(video_input)
     stream = ffmpeg.output(video_input_stream, output_video, vf=f"subtitles={srt_file}:force_style='Alignment=10'").run(overwrite_output=True, quiet=True)
