@@ -60,6 +60,7 @@ def sanitize_text(text: str) -> str:
     regex_expr = r"\s['|’]|['|’]\s|[\^_~@!&;#:\-%—“”‘\"%\*/{}\[\]\(\)\\|<>=+]"
     result = re.sub(regex_expr, " ", result)
     result = result.replace("+", "plus").replace("&", "and")
+    result = result.encode('utf8', errors='replace').decode("utf-8")
 
     # remove extra whitespace
     return " ".join(result.split())

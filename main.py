@@ -3,6 +3,9 @@ import subprocess, shutil, os, time
 from utils import redditreq, generate_subs, tts, variables, video, utils
 import datetime
 from utils.utils import *
+from dotenv import load_dotenv
+
+load_dotenv()
 
 IPV4_ADRESS = "http://localhost:9090"  # Replace with your IPv4 address
 HOURS = 1 # How many hours between posts
@@ -21,10 +24,9 @@ def main():
     if random_post["body"] == "":
         print("Post body is empty, skipping...")
         return FAILED
-
     body = utils.sanitize_text(random_post["body"])
     with open(variables.input_file_path, "w") as file:
-        print("Writing to output.txt...")
+        print(f"Writing to {variables.input_file_path}...")
         file.write(body)
         file.write("If you liked this video, please like, comment and give me a follow!")
     if not os.path.exists(variables.input_file_path):
@@ -56,10 +58,10 @@ def main():
 
     print_step("Adding subtitles to the video...")
     # video.create_final_video(variables.partmp4_path, variables.final_srt_file, variables.final_upload)
-    video.create_final_video(variables.partmp4_path, variables.final_srt_file, "out/"+random_post["title"]+".mp4")
+    output_file = f"out/{random_post["title"]}-{random_post['sub']}.mp4"
+    video.create_final_video(variables.partmp4_path, variables.final_srt_file, output_video=output_file)
 
-    session_id = "0b9e6d830a112c460718ed5dc2b478d8"
-    file = variables.final_upload
+    session_id = os.getenv("TIKTOK_SESSION_ID")
     title = random_post["title"]
     tags = ["scary", "spooky", "scarystories", "fyp"]
     users = ["poweredbyreddit"]
@@ -70,9 +72,8 @@ def main():
     return SUCESS
 
 if __name__ == "__main__":
-    while True:
-        failed = False
-        while not failed:
-            failed = main()
+    for i in range(24):
+        succeeded = False
+        while not succeeded:
+            succeeded = main()
         print("Sucessfully uploaded video. Waiting...")
-        time.sleep(HOURS * 60 * 60)

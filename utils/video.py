@@ -39,7 +39,6 @@ def create_temp_video(video_input, audio_input, output_video):
     video_with_audio.write_videofile(output_video, codec="libx264", audio_codec="aac",)
 
 def create_final_video(video_input, srt_file, output_video):
-    
     # Check if the SRT file exists and is not empty
     if not os.path.exists(srt_file) or os.path.getsize(srt_file) == 0:
         print(f"Subtitle file {srt_file} does not exist or is empty.")
@@ -51,16 +50,19 @@ def create_final_video(video_input, srt_file, output_video):
     # Load the subtitles
     def subtitle_generator(txt):  # Function to style subtitles
         from moviepy.video.VideoClip import TextClip
-        return TextClip(txt, fontsize=24, color='white', bg_color='black', method='caption')
+        return TextClip(txt, fontsize=100, color='white', method='caption', stroke_color="black")
     
     subtitles = SubtitlesClip(srt_file, subtitle_generator)
     
     # Overlay subtitles on the video
-    final_video = CompositeVideoClip([video, subtitles.set_position(('center', 'bottom'))])
+    final_video = CompositeVideoClip([video, subtitles.set_position(('center', 'center'))])
     
     # Write the output video
     final_video.write_videofile(output_video, codec="libx264", audio_codec="aac")
     print("Video creation complete!")
+
+
+
 
 # ffmpeg section
 

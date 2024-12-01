@@ -1,4 +1,5 @@
 import pyttsx3
+import utils.utils as utils
 import requests
 
 def text_to_speech_old(input_file, output_file):
@@ -24,7 +25,7 @@ def text_to_speech_old(input_file, output_file):
 
 
 def text_to_speech(input_file, output_file, ipv4_address):
-    print("Creating the audio track...")
+    utils.print_step("Creating the audio track...")
     """
     Sends a text file to a TTS API and saves the resulting speech to a file.
 
