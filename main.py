@@ -1,7 +1,5 @@
-import subprocess, shutil, os, time
-
+import os
 from utils import redditreq, generate_subs, tts, variables, video, utils
-import datetime
 from utils.utils import *
 from dotenv import load_dotenv
 
@@ -25,7 +23,8 @@ def main():
         print("Post body is empty, skipping...")
         return FAILED
     body = utils.sanitize_text(random_post["body"])
-    with open(variables.input_file_path, "w") as file:
+
+    with open(variables.input_file_path, "w", encoding="utf-8") as file:
         print(f"Writing to {variables.input_file_path}...")
         file.write(body)
         file.write("If you liked this video, please like, comment and give me a follow!")
@@ -40,25 +39,28 @@ def main():
     else:
         os.remove(variables.input_file_path)
 
-    print("Speeding up the audio track...")
-    video.speedup_audio(variables.temp_mp3_path, 1.35, variables.audio_mp3_path)
+    print_step("Speeding up the audio track...")
+    video.speedup_audio_moviepy(variables.temp_mp3_path, 1.35, variables.audio_mp3_path)
     if not os.path.exists(variables.audio_mp3_path):
         print("Couldn't speed up the audio track")
         return FAILED
 
     os.remove(variables.temp_mp3_path) # Deleting the temporary mp3 file because if we don't it's going to 100% fill up the disk
 
-    print("Adding the audio track to the video...")
-    video.create_temp_video(utils.return_random_video(), variables.audio_mp3_path, variables.partmp4_path)
 
     print_step("Generating subtitles...")
     generate_subs.run(variables.audio_mp3_path, variables.final_srt_file)
     if not os.path.exists(variables.final_srt_file):
         return FAILED
 
+    print_step("Adding the audio track to the video...")
+    video.create_temp_video(utils.return_random_video(), variables.audio_mp3_path, variables.partmp4_path)
+
     print_step("Adding subtitles to the video...")
     # video.create_final_video(variables.partmp4_path, variables.final_srt_file, variables.final_upload)
-    output_file = f"out/{random_post["title"]}-{random_post['sub']}.mp4"
+    video_name = random_post["title"].replace("?", "").replace("/", "_").replace("\\", "_").replace(":", "_").replace("*", "_").replace("\"", "_").replace("<", "_").replace(">", "_").replace("|", "_")
+
+    output_file = f"out/{video_name}-{random_post['sub']}.mp4"
     video.create_final_video(variables.partmp4_path, variables.final_srt_file, output_video=output_file)
 
     session_id = os.getenv("TIKTOK_SESSION_ID")
@@ -66,9 +68,10 @@ def main():
     tags = ["scary", "spooky", "scarystories", "fyp"]
     users = ["poweredbyreddit"]
 
+    
     # Publish the video
     # TODO: Add your own upload function here
-
+    
     return SUCESS
 
 if __name__ == "__main__":
@@ -76,4 +79,4 @@ if __name__ == "__main__":
         succeeded = False
         while not succeeded:
             succeeded = main()
-        print("Sucessfully uploaded video. Waiting...")
+        print(f"Sucessfully uploaded video. Waiting... {HOURS} hours")
