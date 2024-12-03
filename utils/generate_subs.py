@@ -1,5 +1,4 @@
 import math
-import ffmpeg
 from faster_whisper import WhisperModel
 import os
 

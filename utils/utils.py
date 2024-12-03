@@ -15,7 +15,6 @@ def print_step(text) -> None:
     panel = Panel(Text(text, justify="left"))
     console.print(panel)
 
-
 def setup_directories():
     if not os.path.exists(OUTPUT_DIR):
         makedirs(OUTPUT_DIR)
@@ -29,6 +28,7 @@ def setup_directories():
 def cleanup():
     shutil.rmtree(OUTPUT_DIR)
     shutil.rmtree(TEMP_FOLDER)
+
 def return_random_video():
     videos = listdir(BACKGROUND_VIDEOS)
     if not videos:
@@ -60,7 +60,7 @@ def sanitize_text(text: str) -> str:
     regex_expr = r"\s['|’]|['|’]\s|[\^_~@!&;#:\-%—“”‘\"%\*/{}\[\]\(\)\\|<>=+]"
     result = re.sub(regex_expr, " ", result)
     result = result.replace("+", "plus").replace("&", "and")
-    result = result.encode('utf8', errors='replace').decode("utf-8")
+    result = result.lower()
 
     # remove extra whitespace
     return " ".join(result.split())
