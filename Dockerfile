@@ -1,20 +1,14 @@
-# syntax=docker/dockerfile:1
+FROM python:3.10.14-slim
 
-FROM python:3.12-alpine3.19
+RUN apt update
+RUN apt install -y git
+RUN apt-get install -y ffmpeg
+RUN apt install python3-pip -y
+RUN apt install imagemagick -y
 
-# Install dependencies
-RUN apk add --no-cache ffmpeg
-RUN apk add --no-cache git
-RUN apk add --no-cache curl
-
+RUN mkdir /app
+ADD . /app
 WORKDIR /app
+RUN pip install -r requirements.txt
 
-COPY requirements.txt requirements.txt
-RUN python3 -m venv venv
-RUN source venv/bin/activate
-RUN pip3 install -r requirements.txt
-
-COPY *.py /app/
-
-CMD [ "python3", "main.py"]
-
+CMD ["python3", "main.py"]

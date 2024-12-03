@@ -3,3 +3,11 @@ services:
     image: mycroftai/mimic3:latest
     ports:
       - '9090:59125'
+  
+  reddit2tok:
+    build: ./
+    image: reddit2tok:latest
+    volumes:
+      - ./out:/app/out
+      - ./bg_vids:/app/bg_vids
+      - ./temp:/app/temp
