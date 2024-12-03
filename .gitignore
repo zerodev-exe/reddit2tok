@@ -139,6 +139,7 @@ VideosDirPath/
 output/
 *.mp4
 youtube_downloader.py
+.env
 
 
 node_modules/
