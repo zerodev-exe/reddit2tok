@@ -58,7 +58,7 @@ def main():
 
     print_step("Adding subtitles to the video...")
     # video.create_final_video(variables.partmp4_path, variables.final_srt_file, variables.final_upload)
-    video_name = random_post["title"].replace("?", "").replace("/", "_").replace("\\", "_").replace(":", "_").replace("*", "_").replace("\"", "_").replace("<", "_").replace(">", "_").replace("|", "_")
+    video_name = random_post["title"].replace("?", "").replace("/", "_").replace("\\", "_").replace(":", "_").replace("*", "_").replace("\"", "_").replace("<", "_").replace(">", "_").replace("|", "_").replace("\n", "").replace("\r", "")
 
     output_file = f"out/{video_name}-{random_post['sub']}.mp4"
     video.create_final_video(variables.partmp4_path, variables.final_srt_file, output_video=output_file)
