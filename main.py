@@ -1,6 +1,7 @@
 import os
 from utils import redditreq, generate_subs, tts, variables, video, utils
 from utils.utils import *
+from moviepy.editor import AudioFileClip
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -19,8 +20,11 @@ def main():
     print("Title:", random_post["title"])
     print("Subreddit:", random_post["sub"])
     print("Post Link:", random_post["url"])
-    if random_post["body"] == "":
-        print("Post body is empty, skipping...")
+    if len(random_post["body"]) > 8000:
+        error_print("Post body is too long, skipping...")
+        return False
+    if random_post["body"] == " " or random_post["body"] == "":
+        error_print("Post body is empty, skipping...")
         return FAILED
     body = utils.sanitize_text(random_post["body"])
 
@@ -29,54 +33,53 @@ def main():
         file.write(body)
         file.write("If you liked this video, please like, comment and give me a follow!")
     if not os.path.exists(variables.input_file_path):
-        print(f"{variables.input_file_path} not found")
+        error_print(f"{variables.input_file_path} not found")
         return FAILED
 
+    print_step("Creating the audio track...")
     tts.text_to_speech(variables.input_file_path, variables.temp_mp3_path, IPV4_ADRESS)
+
+    # Check if the file was created
     if not os.path.exists(variables.temp_mp3_path):
-        print("input.mp3 not found")
-        return FAILED
-    else:
-        os.remove(variables.input_file_path)
-
-    print_step("Speeding up the audio track...")
-    video.speedup_audio_moviepy(variables.temp_mp3_path, 1.35, variables.audio_mp3_path)
-    if not os.path.exists(variables.audio_mp3_path):
-        print("Couldn't speed up the audio track")
+        error_print(f"{variables.temp_mp3_path} not found after TTS call")
         return FAILED
 
-    os.remove(variables.temp_mp3_path) # Deleting the temporary mp3 file because if we don't it's going to 100% fill up the disk
-
-
-    print_step("Generating subtitles...")
-    generate_subs.run(variables.audio_mp3_path, variables.final_srt_file)
-    if not os.path.exists(variables.final_srt_file):
-        return FAILED
-
-    print_step("Adding the audio track to the video...")
-    video.create_temp_video(utils.return_random_video(), variables.audio_mp3_path, variables.partmp4_path)
+    # print_step("Adding the audio track to the video...")
+    # video.create_temp_video(utils.return_random_video(), variables.audio_mp3_path, variables.partmp4_path)
 
     print_step("Adding subtitles to the video...")
-    # video.create_final_video(variables.partmp4_path, variables.final_srt_file, variables.final_upload)
     video_name = random_post["title"].replace("?", "").replace("/", "_").replace("\\", "_").replace(":", "_").replace("*", "_").replace("\"", "_").replace("<", "_").replace(">", "_").replace("|", "_").replace("\n", "").replace("\r", "")
 
     output_file = f"out/{video_name}-{random_post['sub']}.mp4"
-    video.create_final_video(variables.partmp4_path, variables.final_srt_file, output_video=output_file)
+    # video.create_final_video(variables.partmp4_path, variables.final_srt_file, output_video=output_file)
+
+    if not video.process_video(audio_input=temp_mp3_path, audio_output=audio_mp3_path, video_input=return_random_video(), srt_file=final_srt_file, output_video=output_file, speed_factor=1.35):
+        return False
+
 
     session_id = os.getenv("TIKTOK_SESSION_ID")
     title = random_post["title"]
-    tags = ["scary", "spooky", "scarystories", "fyp"]
-    users = ["poweredbyreddit"]
+    if random_post["sub"] == "nosleep":
+        tags = ["scary", "spooky", "scarystories", "fyp"]
+    elif random_post["sub"] == "confession":
+        tags = ["confession", "confessions", "fyp"]
 
-    
     # Publish the video
     # TODO: Add your own upload function here
+    
+    print(" ".join(tags))
+    
+    # video.upload(output_file, title+" ".join(tags))
+
+    
+    utils.cleanup()
     
     return SUCESS
 
 if __name__ == "__main__":
-    for i in range(24):
+    for i in range(5):
+    # while True:
         succeeded = False
         while not succeeded:
             succeeded = main()
-        print(f"Sucessfully uploaded video. Waiting... {HOURS} hours")
+    success_print(f"Sucessfully uploaded video. Waiting... {HOURS} hours")

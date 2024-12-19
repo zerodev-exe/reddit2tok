@@ -1,9 +1,6 @@
 import praw
 import os
 import random
-from dotenv import load_dotenv
-
-load_dotenv()
 
 # Set up your Reddit API credentials
 client_id = os.getenv("REDDIT_CLIENT_ID")
@@ -28,11 +25,13 @@ def get_random_post_text():
     sub = return_random_subreddit()
     subreddit = reddit.subreddit(sub)
 
-    # Fetch a list of hot posts (or another list)
-    posts = list(subreddit.hot(limit=100))  # Getting top 100 posts from 'hot'
+    # # Fetch a list of top posts from today
+    posts = list(subreddit.top(limit=100, time_filter='day'))  # Getting top 100 posts from 'top' of today
 
-    # Select a random post
+    # # Select a random post
     random_post = random.choice(posts)
+
+    # random_post = reddit.submission(id="1hh4phc")
 
     reddit_url = "https://www.reddit.com/r/"+sub+"/comments/"+random_post.id
 

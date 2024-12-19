@@ -15,6 +15,15 @@ def print_step(text) -> None:
     panel = Panel(Text(text, justify="left"))
     console.print(panel)
 
+def error_print(text):
+    console.print("[red]" + text)
+
+def info_print(text):
+    console.print("[blue]" + text)
+
+def success_print(text):
+    console.print("[light_green]" + text)
+
 def setup_directories():
     if not os.path.exists(OUTPUT_DIR):
         makedirs(OUTPUT_DIR)
@@ -26,7 +35,6 @@ def setup_directories():
         makedirs(TEMP_FOLDER)
 
 def cleanup():
-    shutil.rmtree(OUTPUT_DIR)
     shutil.rmtree(TEMP_FOLDER)
 
 def return_random_video():

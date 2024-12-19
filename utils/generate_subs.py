@@ -1,6 +1,10 @@
 import math
 from faster_whisper import WhisperModel
 import os
+from rich.console import Console
+from utils.utils import *
+
+console = Console()
 
 num_cores = os.cpu_count()
 
@@ -13,8 +17,8 @@ def transcribe(audio):
 
     segments = list(segments)
     for segment in segments:
-        print("[%.2fs --> %.2fs] %s" %
-              (segment.start, segment.end, segment.text))
+        print("[%.2fs --> %.2fs] %s" % (segment.start, segment.end, segment.text))
+
     return segments
 
 def split_segment_by_words_and_line_width(segment, max_words=3, max_line_width=15):
@@ -32,7 +36,7 @@ def split_segment_by_words_and_line_width(segment, max_words=3, max_line_width=1
         lines = []
         current_line = ""
         for word in sub_text.split():
-            if len(current_line) + len(word) + 1 <= max_line_width:  # +1 for space
+            if len(current_line) + len(word) <= max_line_width:  # +1 for space
                 current_line += (" " + word if current_line else word)
             else:
                 lines.append(current_line)
@@ -43,6 +47,10 @@ def split_segment_by_words_and_line_width(segment, max_words=3, max_line_width=1
 
         sub_start_time = segment.start + start_word_idx * duration_per_word
         sub_end_time = segment.start + end_word_idx * duration_per_word
+        
+        # Ensure the end time does not exceed the segment's end time
+        if sub_end_time > segment.end:
+            sub_end_time = segment.end
         
         sub_segments.append((sub_start_time, sub_end_time, formatted_text))
     
@@ -79,7 +87,11 @@ def generate_subtitle_file(subtitle_file, segments, max_words=3, max_line_width=
     return subtitle_file
 
 def run(input_audio, srt_file):
+    info_print("Starting the transcription process...")
     segments = transcribe(audio=input_audio)
+    info_print("Transcription complete.")
     subtitle_file = generate_subtitle_file(subtitle_file=srt_file, segments=segments)
+    info_print(f"File has sucessfully been written to {subtitle_file}")
 
-    print("Subtitle file generated:", subtitle_file)
+    info_print("Subtitle file generated: " + subtitle_file)
+    return True
